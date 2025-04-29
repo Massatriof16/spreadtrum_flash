@@ -383,12 +383,12 @@ int send_msg(spdio_t *io) {
 #if USE_LIBUSB
 	int err = libusb_bulk_transfer(io->dev_handle, io->endp_out, io->enc_buf, io->enc_len, &ret, io->timeout);
 	if (err < 0)
-		ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+		ERR_EXIT("pengiriman_usb gagal : %s\n", libusb_error_name(err));
 #else
 	ret = call_Write(io->handle, io->enc_buf, io->enc_len);
 #endif
 	if (ret != io->enc_len)
-		ERR_EXIT("usb_send failed (%d / %d)\n", ret, io->enc_len);
+		ERR_EXIT("pengiriman_usb gagal (%d / %d)\n", ret, io->enc_len);
 
 	return ret;
 }
@@ -410,7 +410,7 @@ int recv_msg_orig(spdio_t *io) {
 #if USE_LIBUSB
 			int err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &len, io->timeout);
 			if (err == LIBUSB_ERROR_NO_DEVICE)
-				ERR_EXIT("connection closed\n");
+				ERR_EXIT("Koneksi terputus\n");
 			else if (err < 0) {
 				DBG_LOG("usb_recv failed : %s\n", libusb_error_name(err)); return 0;
 			}
@@ -1224,13 +1224,13 @@ void load_partition(spdio_t *io, const char *name,
 				ERR_EXIT("fread(load) failed\n");
 #if USE_LIBUSB
 				int err = libusb_bulk_transfer(io->dev_handle, io->endp_out, rawbuf, n, &ret, io->timeout); //libusb will fail with rawbuf
-				if (err < 0) ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+				if (err < 0) ERR_EXIT("pengiriman_usb gagal : %s\n", libusb_error_name(err));
 #else
 			ret = call_Write(io->handle, rawbuf, n);
 #endif
 			if (io->verbose >= 1) DBG_LOG("send (%d)\n", n);
 			if (ret != (int)n)
-				ERR_EXIT("usb_send failed (%d / %d)\n", ret, n);
+				ERR_EXIT("pengiriman_usb gagal (%d / %d)\n", ret, n);
 			if (is_simg) ret = recv_msg_timeout(io, 100000);
 			else ret = recv_msg_timeout(io, 15000);
 			if (!ret) {
@@ -1306,7 +1306,7 @@ void load_partition_force(spdio_t *io, const int id, const char *fn, unsigned st
 		buf += 0x4c;
 	}
 	encode_msg(io, BSL_CMD_REPARTITION, io->temp_buf, io->part_count * 0x4c);
-	if (!send_and_check(io)) DBG_LOG("Force Write %s Done\n", (*(io->ptable + id)).name);
+	if (!send_and_check(io)) DBG_LOG("Paksa Pasang partisi %s Selesai\n", (*(io->ptable + id)).name);
 }
 
 unsigned short const crc16_table[256] = {
@@ -1581,7 +1581,7 @@ void get_partition_info(spdio_t *io, const char *name, int need_size) {
 		}
 		if (gpt_failed == 1) io->ptable = partition_list(io, fn_partlist, &io->part_count);
 		if (i > io->part_count) {
-			DBG_LOG("part not exist\n");
+			DBG_LOG("Partisi Tidak Ada\n");
 			gPartInfo.size = 0;
 			io->verbose = verbose;
 			return;
@@ -1621,7 +1621,7 @@ void get_partition_info(spdio_t *io, const char *name, int need_size) {
 		name = name_ab;
 	}
 	if (!gPartInfo.size) {
-		DBG_LOG("part not exist\n");
+		DBG_LOG("Partisi Tidak Ada\n");
 		io->verbose = verbose;
 		return;
 	}
@@ -2038,7 +2038,7 @@ uint32_t crc32(uint32_t crc_in, const uint8_t * buf, int size) {
 
 void w_mem_to_part_offset(spdio_t *io, const char *name, size_t offset, uint8_t *mem, size_t length, unsigned step) {
 	get_partition_info(io, name, 1);
-	if (!gPartInfo.size) { DBG_LOG("part not exist\n"); return; }
+	if (!gPartInfo.size) { DBG_LOG("Partisi Tidak Ada\n"); return; }
 	else if (gPartInfo.size > 0xffffffff) { DBG_LOG("part too large\n"); return; }
 
 	char dfile[40];
@@ -2235,7 +2235,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 	int done = 0;
 
 	while (!done) {
-		DBG_LOG("Waiting for boot_diag/cali_diag/dl_diag connection (%ds)\n", ms / 1000);
+		DBG_LOG("Menunggu Koneksi untuk mode boot_diag/cali_diag/dl_diag (%ds)\n", ms / 1000);
 		for (int i = 0; ; i++) {
 			if (curPort) {
 				if (!call_ConnectChannel(io->handle, curPort)) ERR_EXIT("Connection failed\n");
@@ -2317,7 +2317,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 						}
 						if (!memcmp(io->recv_buf + bytes_read - 7, ok, 6)) done = 1;
 						else {
-							DBG_LOG("Unknown response\n");
+							DBG_LOG("Respon tidak diketahui\n");
 							if (io->verbose < 2) print_mem(stderr, io->recv_buf, bytes_read);
 						}
 					}
@@ -2423,14 +2423,14 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 
 			err = libusb_bulk_transfer(io->dev_handle, io->endp_out, hello, sizeof(hello), &bytes_written, io->timeout);
 			if (err < 0)
-				ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+				ERR_EXIT("pengiriman_usb gagal : %s\n", libusb_error_name(err));
 			if (io->verbose >= 2) {
 				DBG_LOG("send (%d):\n", (int)sizeof(hello));
 				print_mem(stderr, hello, sizeof(hello));
 			}
 			err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &bytes_read, io->timeout);
 			if (err == LIBUSB_ERROR_NO_DEVICE)
-				ERR_EXIT("connection closed\n");
+				ERR_EXIT("Koneksi terputus\n");
 			else if (err < 0)
 				ERR_EXIT("usb_recv failed : %s\n", libusb_error_name(err));
 			if (!bytes_read) ERR_EXIT("read response from boot mode failed\n");
@@ -2458,14 +2458,14 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 
 		err = libusb_bulk_transfer(io->dev_handle, io->endp_out, payload, sizeof(payload), &bytes_written, io->timeout);
 		if (err < 0)
-			ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+			ERR_EXIT("pengiriman_usb gagal : %s\n", libusb_error_name(err));
 		if (io->verbose >= 2) {
 			DBG_LOG("send (%d):\n", (int)sizeof(payload));
 			print_mem(stderr, payload, sizeof(payload));
 		}
 		err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &bytes_read, io->timeout);
 		if (err == LIBUSB_ERROR_NO_DEVICE)
-			DBG_LOG("connection closed\n");
+			DBG_LOG("Koneksi terputus\n");
 		else if (err < 0)
 			ERR_EXIT("usb_recv failed : %s\n", libusb_error_name(err));
 		else if (bytes_read) {
@@ -2498,7 +2498,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 					}
 					err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &bytes_read, io->timeout);
 					if (err == LIBUSB_ERROR_NO_DEVICE)
-						DBG_LOG("connection closed\n");
+						DBG_LOG("Koneksi terputus\n");
 					else if (err < 0)
 						ERR_EXIT("usb_recv failed : %s\n", libusb_error_name(err));
 					else if (bytes_read) {
@@ -2509,7 +2509,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 						}
 						if (!memcmp(io->recv_buf + bytes_read - 7, ok, 6)) done = 1;
 						else {
-							DBG_LOG("Unknown response\n");
+							DBG_LOG("Respon tidak diketahui\n");
 							if (io->verbose < 2) print_mem(stderr, io->recv_buf, bytes_read);
 						}
 					}
