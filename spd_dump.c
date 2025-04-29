@@ -354,11 +354,11 @@ int main(int argc, char **argv) {
 		if (ret == BSL_REP_ACK || ret == BSL_REP_VER || ret == BSL_REP_VERIFY_ERROR) {
 			if (ret == BSL_REP_VER) {
 				if (fdl1_loaded == 1) {
-					DBG_LOG("CHECK_BAUD FDL1\n");
+					DBG_LOG("PERIKSA BAUD MODE FDL1\n");
 					if (!memcmp(io->raw_buf + 4, "SPRD4", 5)) fdl2_executed = -1;
 				}
 				else {
-					DBG_LOG("CHECK_BAUD bootrom\n");
+					DBG_LOG("PERIKSA BAUD MODE BOOTROM\n");
 					if (!memcmp(io->raw_buf + 4, "SPRD4", 5)) { fdl1_loaded = -1; fdl2_executed = -1; }
 				}
 				DBG_LOG("BSL_REP_VER: ");
@@ -376,13 +376,13 @@ int main(int argc, char **argv) {
 			}
 
 			if (fdl1_loaded == 1) {
-				DBG_LOG("CMD_CONNECT FDL1\n");
+				DBG_LOG("CMD TERSAMBUNG MODE FDL1\n");
 				if (keep_charge) {
 					encode_msg(io, BSL_CMD_KEEP_CHARGE, NULL, 0);
 					if (!send_and_check(io)) DBG_LOG("KEEP_CHARGE FDL1\n");
 				}
 			}
-			else DBG_LOG("CMD_CONNECT bootrom\n");
+			else DBG_LOG("CMD TERSAMBUNG MODE BOOTROM\n");
 			break;
 		}
 		else if (ret == BSL_REP_UNSUPPORTED_COMMAND) {
@@ -541,7 +541,7 @@ int main(int argc, char **argv) {
 			}
 
 			if (fdl2_executed > 0) {
-				DBG_LOG("FDL2 ALREADY EXECUTED, SKIP\n");
+				DBG_LOG("FDL2 SUDAH DIJALANKAN, SKIP\n");
 				argc -= argchange; argv += argchange;
 				continue;
 			}
@@ -590,7 +590,7 @@ int main(int argc, char **argv) {
 					encode_msg(io, BSL_CMD_EXEC_DATA, NULL, 0);
 					if (send_and_check(io)) exit(1);
 				}
-				DBG_LOG("EXEC FDL1\n");
+				DBG_LOG("MENJALANKAN FDL1\n");
 				if (addr == 0x5500 || addr == 0x65000800) {
 					highspeed = 1;
 					if (!baudrate) baudrate = 921600;
@@ -604,11 +604,11 @@ int main(int argc, char **argv) {
 					send_msg(io);
 					recv_msg(io);
 					if (recv_type(io) == BSL_REP_VER) break;
-					DBG_LOG("CHECK_BAUD FAIL\n");
+					DBG_LOG("PERIKSA BAUD MODE GAGAL\n");
 					if (i == 4) ERR_EXIT("Error Perintah salah atau Mode salah Terdeteksi, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
 					usleep(500000);
 				}
-				DBG_LOG("CHECK_BAUD FDL1\n");
+				DBG_LOG("PERIKSA BAUD MODE FDL1\n");
 
 				DBG_LOG("BSL_REP_VER: ");
 				print_string(stderr, io->raw_buf + 4, READ16_BE(io->raw_buf + 2));
@@ -644,14 +644,14 @@ int main(int argc, char **argv) {
 
 				encode_msg(io, BSL_CMD_CONNECT, NULL, 0);
 				if (send_and_check(io)) exit(1);
-				DBG_LOG("CMD_CONNECT FDL1\n");
+				DBG_LOG("CMD TETSAMBUNG MODE FDL1\n");
 #if !USE_LIBUSB
 				if (baudrate) {
 					uint8_t data[4];
 					WRITE32_BE(data, baudrate);
 					encode_msg(io, BSL_CMD_CHANGE_BAUD, data, 4);
 					if (!send_and_check(io)) {
-						DBG_LOG("CHANGE_BAUD FDL1 to %d\n", baudrate);
+						DBG_LOG("MENGUBAH BAUD MODE FDL1 KE %d\n", baudrate);
 						call_SetProperty(io->handle, 0, 100, (LPCVOID)&baudrate);
 					}
 				}
@@ -667,7 +667,7 @@ int main(int argc, char **argv) {
 		}
 		else if (!strcmp(str2[1], "exec")) {
 			if (fdl2_executed > 0) {
-				DBG_LOG("FDL2 ALREADY EXECUTED, SKIP\n");
+				DBG_LOG("FDL2 TELAH DIJALANKAN, SKIP\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -685,7 +685,7 @@ int main(int argc, char **argv) {
 					get_Da_Info(io);
 				else if (ret != BSL_REP_ACK)
 					ERR_EXIT("Error, Respon Tak Terduga (0x%04x)\n", ret);
-				DBG_LOG("EXEC FDL2\n");
+				DBG_LOG("MENJALANKAN FDL2\n");
 				if (Da_Info.bDisableHDLC) {
 					encode_msg(io, BSL_CMD_DISABLE_TRANSCODE, NULL, 0);
 					if (!send_and_check(io)) {
