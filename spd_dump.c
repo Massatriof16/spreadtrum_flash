@@ -314,11 +314,11 @@ int main(int argc, char **argv) {
 #else
 			if (io->verbose) DBG_LOG("CurTime: %.1f, CurPort: %d\n", (float)i / REOPEN_FREQ, curPort);
 			if (curPort) {
-				if (!call_ConnectChannel(io->handle, curPort)) ERR_EXIT("Connection failed\n");
+				if (!call_ConnectChannel(io->handle, curPort)) ERR_EXIT("Koneksi Gagal\n");
 				break;
 			}
 			if (i >= wait)
-				ERR_EXIT("find port failed\n");
+				ERR_EXIT("Gagal Menemukan Port\n");
 #endif
 			usleep(1000000 / REOPEN_FREQ);
 		}
@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
 			break;
 		}
 		else if (i == 4) {
-			if (stage != -1) ERR_EXIT("wrong command or wrong mode detected, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
+			if (stage != -1) ERR_EXIT("perintah salah atau mode salah terdeteksi, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
 			else { encode_msg(io, BSL_CMD_CONNECT, NULL, 0); stage++; i = -1; }
 		}
 	}
@@ -999,7 +999,7 @@ rloop:
 			if (argcount <= 2) { DBG_LOG("repartition FILE\n"); argc = 1; continue; }
 			fn = str2[2];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 2; argv += 2; continue; }
+			if (fi == NULL) { DBG_LOG("File tidak ada.\n"); argc -= 2; argv += 2; continue; }
 			else fclose(fi);
 			if (skip_confirm) repartition(io, str2[2]);
 			else if (check_confirm("repartition")) repartition(io, str2[2]);
@@ -1024,7 +1024,7 @@ rloop:
 					}
 				get_partition_info(io, name, 0);
 			}
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 2; argv += 2; continue; }
+			if (!gPartInfo.size) { DBG_LOG("Partisi tidak ada\n"); argc -= 2; argv += 2; continue; }
 			erase_partition(io, gPartInfo.name);
 			argc -= 2; argv += 2;
 
@@ -1072,13 +1072,13 @@ rloop:
 			const char *name = str2[2];
 			if (argcount <= 3) { DBG_LOG("w_force part_name/part_id FILE\n"); argc = 1; continue; }
 			if (Da_Info.dwStorageType == 0x101) { DBG_LOG("w_force is not allowed on NAND(UBI) devices\n"); argc -= 3; argv += 3; continue; }
-			if (!io->part_count) { DBG_LOG("Partition table not available\n"); argc -= 3; argv += 3; continue; }
+			if (!io->part_count) { DBG_LOG("Partition table tidak tersedia\n"); argc -= 3; argv += 3; continue; }
 			fn = str2[3];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 3; argv += 3; continue; }
+			if (fi == NULL) { DBG_LOG("File tidak ada.\n"); argc -= 3; argv += 3; continue; }
 			else fclose(fi);
 			get_partition_info(io, name, 0);
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 3; argv += 3; continue; }
+			if (!gPartInfo.size) { DBG_LOG("partisi tidak ada\n"); argc -= 3; argv += 3; continue; }
 
 			if (!memcmp(gPartInfo.name, "splloader", 9)) { DBG_LOG("blacklist!\n"); argc -= 3; argv += 3; continue; }
 			else if(isdigit(str2[2][0])) load_partition_force(io, atoi(str2[2]) - 1, fn, blk_size ? blk_size : DEFAULT_BLK_SIZE);
@@ -1200,9 +1200,9 @@ rloop:
 			encode_msg(io, BSL_CMD_READ_CHIP_UID, NULL, 0);
 			send_msg(io);
 			ret = recv_msg(io);
-			if (!ret) ERR_EXIT("timeout reached\n");
+			if (!ret) ERR_EXIT("Error, batas waktu tercapai\n");
 			if ((ret = recv_type(io)) != BSL_REP_READ_CHIP_UID) {
-				DBG_LOG("unexpected response (0x%04x)\n", ret); argc -= 1; argv += 1; continue;
+				DBG_LOG("Error, Respon Tak Terduga (0x%04x)\n", ret); argc -= 1; argv += 1; continue;
 			}
 
 			DBG_LOG("BSL_REP_READ_CHIP_UID: ");
@@ -1246,7 +1246,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "reset")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL TIDAK SIAP\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1256,7 +1256,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "reboot-recovery")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL TIDAK SIAP\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1272,7 +1272,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "reboot-fastboot")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL TIDAK SIAP\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1289,7 +1289,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "poweroff")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL TIDAK SIAP\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1312,7 +1312,7 @@ rloop:
 				free(str2[i]);
 		free(str2);
 		if (m_bOpened == -1) {
-			DBG_LOG("device removed, exiting...\n");
+			DBG_LOG("perangkat dilepas, keluar...\n");
 			break;
 		}
 	}
