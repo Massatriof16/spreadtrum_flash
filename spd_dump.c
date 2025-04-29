@@ -548,7 +548,7 @@ int main(int argc, char **argv) {
 			else if (fdl1_loaded > 0) {
 				if (fdl2_executed != -1) {
 					fi = fopen(fn, "r");
-					if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= argchange; argv += argchange; continue; }
+					if (fi == NULL) { DBG_LOG("Error, File Tidak ada.\n"); argc -= argchange; argv += argchange; continue; }
 					else fclose(fi);
 					send_file(io, fn, addr, end_data, blk_size ? blk_size : 528, 0, 0);
 				}
@@ -556,7 +556,7 @@ int main(int argc, char **argv) {
 			else {
 				if (fdl1_loaded != -1) {
 					fi = fopen(fn, "r");
-					if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= argchange; argv += argchange; continue; }
+					if (fi == NULL) { DBG_LOG("Error, File Tidak ada.\n"); argc -= argchange; argv += argchange; continue; }
 					else fclose(fi);
 					if (exec_addr_new) {
 						size_t execsize = send_file(io, fn, addr, 0, 528, 0, 0);
@@ -605,7 +605,7 @@ int main(int argc, char **argv) {
 					recv_msg(io);
 					if (recv_type(io) == BSL_REP_VER) break;
 					DBG_LOG("CHECK_BAUD FAIL\n");
-					if (i == 4) ERR_EXIT("wrong command or wrong mode detected, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
+					if (i == 4) ERR_EXIT("Error Perintah salah atau Mode salah Terdeteksi, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
 					usleep(500000);
 				}
 				DBG_LOG("CHECK_BAUD FDL1\n");
@@ -625,7 +625,7 @@ int main(int argc, char **argv) {
 				while (1) {
 					send_msg(io);
 					ret = recv_msg(io);
-					if (!ret) ERR_EXIT("timeout reached\n");
+					if (!ret) ERR_EXIT("Error, Batas Waktu Tercapai\n");
 					if (recv_type(io) == BSL_CMD_READ_END) break;
 					pdump = (char *)(io->raw_buf + 4);
 					for (i = 0; i < 512; i++) {
@@ -678,13 +678,13 @@ int main(int argc, char **argv) {
 				// Feature phones respond immediately,
 				// but it may take a second for a smartphone to respond.
 				ret = recv_msg_timeout(io, 15000);
-				if (!ret) ERR_EXIT("timeout reached\n");
+				if (!ret) ERR_EXIT("Error, Batas waktu tercapai \n");
 				ret = recv_type(io);
 				// Is it always bullshit?
 				if (ret == BSL_REP_INCOMPATIBLE_PARTITION)
 					get_Da_Info(io);
 				else if (ret != BSL_REP_ACK)
-					ERR_EXIT("unexpected response (0x%04x)\n", ret);
+					ERR_EXIT("Error, Respon Tak Terduga (0x%04x)\n", ret);
 				DBG_LOG("EXEC FDL2\n");
 				if (Da_Info.bDisableHDLC) {
 					encode_msg(io, BSL_CMD_DISABLE_TRANSCODE, NULL, 0);
@@ -756,7 +756,7 @@ int main(int argc, char **argv) {
 				exec_addr = strtoul(str2[2], NULL, 0);
 				sprintf(execfile, "custom_exec_no_verify_%x.bin", exec_addr);
 				fi = fopen(execfile, "r");
-				if (fi == NULL) { DBG_LOG("%s does not exist\n", execfile); exec_addr = 0; }
+				if (fi == NULL) { DBG_LOG("Gagal, %s tidak ada\n", execfile); exec_addr = 0; }
 				else fclose(fi);
 			}
 			DBG_LOG("current exec_addr is 0x%x\n", exec_addr);
@@ -776,7 +776,7 @@ int main(int argc, char **argv) {
 				ret = sscanf(fn, "custom_exec_no_verify_%[0-9a-fA-F]", straddr);
 				exec_addr = strtoul(straddr, NULL, 16);
 				fi = fopen(execfile, "r");
-				if (fi == NULL) { DBG_LOG("%s does not exist\n", execfile); exec_addr = 0; }
+				if (fi == NULL) { DBG_LOG("Gagal, %s tidak ada\n", execfile); exec_addr = 0; }
 				else fclose(fi);
 			}
 			DBG_LOG("current exec_addr is 0x%x\n", exec_addr);
@@ -881,7 +881,7 @@ int main(int argc, char **argv) {
 
 			name = str2[2];
 			get_partition_info(io, name, 0);
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 5; argv += 5; continue; }
+			if (!gPartInfo.size) { DBG_LOG("Gagal, Partisi Tidak ada\n"); argc -= 5; argv += 5; continue; }
 
 			if (0xffffffff == size) size = check_partition(io, gPartInfo.name, 1);
 			if (offset + size < offset) { DBG_LOG("64-bit limit reached\n"); argc -= 5; argv += 5; continue; }
@@ -967,7 +967,7 @@ rloop:
 			if (argcount <= 2) { DBG_LOG("read_parts partition_list_file\n"); argc = 1; continue; }
 			fn = str2[2];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 2; argv += 2; continue; }
+			if (fi == NULL) { DBG_LOG("Gagal, File tidak ada.\n"); argc -= 2; argv += 2; continue; }
 			else fclose(fi);
 			dump_partitions(io, fn, nand_info, blk_size ? blk_size : DEFAULT_BLK_SIZE);
 			argc -= 2; argv += 2;
@@ -1044,7 +1044,7 @@ rloop:
 			if (argcount <= 3) { DBG_LOG("write_part part_name/part_id FILE\n"); argc = 1; continue; }
 			fn = str2[3];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 3; argv += 3; continue; }
+			if (fi == NULL) { DBG_LOG("Gagal, File tidak ada.\n"); argc -= 3; argv += 3; continue; }
 			else fclose(fi);
 			if (!skip_confirm)
 				if (!check_confirm("write partition")) {
@@ -1052,7 +1052,7 @@ rloop:
 					continue;
 				}
 			get_partition_info(io, name, 0);
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 3; argv += 3; continue; }
+			if (!gPartInfo.size) { DBG_LOG("Gagal, Partisi Tidak ada\n"); argc -= 3; argv += 3; continue; }
 
 			load_partition_unify(io, gPartInfo.name, fn, blk_size ? blk_size : DEFAULT_BLK_SIZE);
 			argc -= 3; argv += 3;
