@@ -1031,8 +1031,8 @@ int gpt_info(partition_t *ptable, const char *fn_xml, int *part_count_ptr) {
 	free(entries);
 	fclose(fp);
 	*part_count_ptr = n;
-	DBG_LOG("standard gpt table saved to pgpt.bin\n");
-	DBG_LOG("skip saving sprd partition list packet\n");
+	DBG_LOG("Tabel GPT standar disimpan pgpt.bin\n");
+	DBG_LOG("Melewati Menyimpan Paket Daftar Partisi SPRD\n");
 	return 0;
 }
 
@@ -1119,10 +1119,10 @@ partition_t *partition_list(spdio_t *io, const char *fn, int *part_count_ptr) {
 		gpt_failed = 0;
 	}
 	if (*part_count_ptr) {
-		if (strcmp(fn, "-")) DBG_LOG("partition list saved to %s\n", fn);
+		if (strcmp(fn, "-")) DBG_LOG("Daftar partisi disimpan ke %s\n", fn);
 		DBG_LOG("Jumlah Seluruh partisi: %d\n", *part_count_ptr);
-		if (Da_Info.dwStorageType == 0x102) DBG_LOG("Tipe Memori device ini adalah EMMC\n");
-		else if (Da_Info.dwStorageType == 0x103) DBG_LOG("Tipe Memori device ini adalah UFS\n");
+		if (Da_Info.dwStorageType == 0x102) DBG_LOG("Tipe Memori device ini EMMC\n");
+		else if (Da_Info.dwStorageType == 0x103) DBG_LOG("Tipe Memori device ini UFS\n");
 		return ptable;
 	}
 	else {
