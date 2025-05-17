@@ -73,7 +73,7 @@ void print_help(void) {
 		"\t\t\tr all_lite: full backup (excludes inactive slot partitions, blackbox, cache, and userdata)\n"
 		"\t\t\tall/all_lite is not usable on NAND\n"
 		"\t\tWhen the partition table is unavailable:\n"
-		"\t\t\tr will auto-calculate part size (supports emmc/ufs and NAND).\n"
+		"\t\t\tr will auto-calculate part size (supports emmc/ and NAND).\n"
 		"\tread_part part_name|part_id offset size FILE\n"
 		"\t\tReads a specific partition to a file at the given offset and size.\n"
 		"\t\t(read ubi on nand) read_part system 0 ubi40m system.bin\n"
@@ -291,13 +291,13 @@ int main(int argc, char **argv) {
 	}
 #endif
 	if (!m_bOpened) {
-		DBG_LOG("Waiting for dl_diag connection (%ds)\n", wait / REOPEN_FREQ);
+		DBG_LOG("Menunggu koneksi dl_diag (%ds)\n", wait / REOPEN_FREQ);
 		for (i = 0; ; i++) {
 #if USE_LIBUSB
 			if (bListenLibusb) {
 				if (curPort) {
 					if (libusb_open(curPort, &io->dev_handle) >= 0) call_Initialize_libusb(io);
-					else ERR_EXIT("Connection failed\n");
+					else ERR_EXIT("Koneksi gagal\n");
 					break;
 				}
 			}
@@ -310,15 +310,15 @@ int main(int argc, char **argv) {
 				}
 			}
 			if (i >= wait)
-				ERR_EXIT("libusb_open_device failed\n");
+				ERR_EXIT("libusb_open_device gagal\n");
 #else
 			if (io->verbose) DBG_LOG("CurTime: %.1f, CurPort: %d\n", (float)i / REOPEN_FREQ, curPort);
 			if (curPort) {
-				if (!call_ConnectChannel(io->handle, curPort)) ERR_EXIT("Connection failed\n");
+				if (!call_ConnectChannel(io->handle, curPort)) ERR_EXIT("Koneksi gagal\n");
 				break;
 			}
 			if (i >= wait)
-				ERR_EXIT("find port failed\n");
+				ERR_EXIT("menemukan port gagal\n");
 #endif
 			usleep(1000000 / REOPEN_FREQ);
 		}
@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
 				ret = io->recv_buf[2];
 				io->recv_buf[2] = 0;
 			}
-			else ERR_EXIT("wrong command or wrong mode detected, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
+			else ERR_EXIT("perintah yang salah atau mode yang salah terdeteksi, boot ulang ponsel Anda dengan menekan POWER dan VOL_UP selama 7-10 detik.\n");
 		}
 		else {
 			send_msg(io);
@@ -354,11 +354,11 @@ int main(int argc, char **argv) {
 		if (ret == BSL_REP_ACK || ret == BSL_REP_VER || ret == BSL_REP_VERIFY_ERROR) {
 			if (ret == BSL_REP_VER) {
 				if (fdl1_loaded == 1) {
-					DBG_LOG("CHECK_BAUD FDL1\n");
+					DBG_LOG("MEMERIKSA_BAUD FDL1\n");
 					if (!memcmp(io->raw_buf + 4, "SPRD4", 5)) fdl2_executed = -1;
 				}
 				else {
-					DBG_LOG("CHECK_BAUD bootrom\n");
+					DBG_LOG("MEMERIKSA_BAUD BOOTROM\n");
 					if (!memcmp(io->raw_buf + 4, "SPRD4", 5)) { fdl1_loaded = -1; fdl2_executed = -1; }
 				}
 				DBG_LOG("BSL_REP_VER: ");
@@ -376,13 +376,13 @@ int main(int argc, char **argv) {
 			}
 
 			if (fdl1_loaded == 1) {
-				DBG_LOG("CMD_CONNECT FDL1\n");
+				DBG_LOG("CMD TERSAMBUNG MODE FDL1\n");
 				if (keep_charge) {
 					encode_msg(io, BSL_CMD_KEEP_CHARGE, NULL, 0);
 					if (!send_and_check(io)) DBG_LOG("KEEP_CHARGE FDL1\n");
 				}
 			}
-			else DBG_LOG("CMD_CONNECT bootrom\n");
+			else DBG_LOG("CMD TERSAMBUNG MODE BOOTROM\n");
 			break;
 		}
 		else if (ret == BSL_REP_UNSUPPORTED_COMMAND) {
@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
 			break;
 		}
 		else if (i == 4) {
-			if (stage != -1) ERR_EXIT("wrong command or wrong mode detected, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
+			if (stage != -1) ERR_EXIT("perintah yang salah atau mode yang salah terdeteksi, boot ulang ponsel Anda dengan menekan POWER dan VOL_UP selama 7-10 detik.\n");
 			else { encode_msg(io, BSL_CMD_CONNECT, NULL, 0); stage++; i = -1; }
 		}
 	}
@@ -430,11 +430,11 @@ int main(int argc, char **argv) {
 			in_quote = 0;
 
 			if (fdl2_executed > 0)
-				DBG_LOG("FDL2 >");
+				DBG_LOG("MODE FDL2 =>");
 			else if (fdl1_loaded > 0)
-				DBG_LOG("FDL1 >");
+				DBG_LOG("MODE FDL1 =>");
 			else
-				DBG_LOG("BROM >");
+				DBG_LOG("MODE BROM =>");
 			ret = scanf("%[^\n]", str1);
 			while ('\n' != getchar());
 
@@ -502,7 +502,7 @@ int main(int argc, char **argv) {
 
 			fn = str2[2];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 3; argv += 3; continue; }
+			if (fi == NULL) { DBG_LOG("file tidak ada.\n"); argc -= 3; argv += 3; continue; }
 			else fclose(fi);
 			addr = strtoul(str2[3], NULL, 0);
 			send_file(io, fn, addr, 0, 528, 0, 0);
@@ -541,14 +541,14 @@ int main(int argc, char **argv) {
 			}
 
 			if (fdl2_executed > 0) {
-				DBG_LOG("FDL2 ALREADY EXECUTED, SKIP\n");
+				DBG_LOG("FDL2 SUDAH DIEKSEKUSI, LEWATI\n");
 				argc -= argchange; argv += argchange;
 				continue;
 			}
 			else if (fdl1_loaded > 0) {
 				if (fdl2_executed != -1) {
 					fi = fopen(fn, "r");
-					if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= argchange; argv += argchange; continue; }
+					if (fi == NULL) { DBG_LOG("file tidak ada.\n"); argc -= argchange; argv += argchange; continue; }
 					else fclose(fi);
 					send_file(io, fn, addr, end_data, blk_size ? blk_size : 528, 0, 0);
 				}
@@ -556,7 +556,7 @@ int main(int argc, char **argv) {
 			else {
 				if (fdl1_loaded != -1) {
 					fi = fopen(fn, "r");
-					if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= argchange; argv += argchange; continue; }
+					if (fi == NULL) { DBG_LOG("file tidak ada.\n"); argc -= argchange; argv += argchange; continue; }
 					else fclose(fi);
 					if (exec_addr_new) {
 						size_t execsize = send_file(io, fn, addr, 0, 528, 0, 0);
@@ -590,7 +590,7 @@ int main(int argc, char **argv) {
 					encode_msg(io, BSL_CMD_EXEC_DATA, NULL, 0);
 					if (send_and_check(io)) exit(1);
 				}
-				DBG_LOG("EXEC FDL1\n");
+				DBG_LOG("MENGEKSEKUSI FDL1\n");
 				if (addr == 0x5500 || addr == 0x65000800) {
 					highspeed = 1;
 					if (!baudrate) baudrate = 921600;
@@ -604,11 +604,11 @@ int main(int argc, char **argv) {
 					send_msg(io);
 					recv_msg(io);
 					if (recv_type(io) == BSL_REP_VER) break;
-					DBG_LOG("CHECK_BAUD FAIL\n");
-					if (i == 4) ERR_EXIT("wrong command or wrong mode detected, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
+					DBG_LOG("MEMERIKSA_BAUD GAGAL\n");
+					if (i == 4) ERR_EXIT("perintah yang salah atau mode yang salah terdeteksi, nyalakan ulang ponsel Anda dengan menekan POWER dan VOL_UP selama 7-10 detik.\n");
 					usleep(500000);
 				}
-				DBG_LOG("CHECK_BAUD FDL1\n");
+				DBG_LOG("MEMERIKSA_BAUD FDL1\n");
 
 				DBG_LOG("BSL_REP_VER: ");
 				print_string(stderr, io->raw_buf + 4, READ16_BE(io->raw_buf + 2));
@@ -625,7 +625,7 @@ int main(int argc, char **argv) {
 				while (1) {
 					send_msg(io);
 					ret = recv_msg(io);
-					if (!ret) ERR_EXIT("timeout reached\n");
+					if (!ret) ERR_EXIT("ERROR, BATAS WAKTU TERCAPAI\n");
 					if (recv_type(io) == BSL_CMD_READ_END) break;
 					pdump = (char *)(io->raw_buf + 4);
 					for (i = 0; i < 512; i++) {
@@ -644,14 +644,14 @@ int main(int argc, char **argv) {
 
 				encode_msg(io, BSL_CMD_CONNECT, NULL, 0);
 				if (send_and_check(io)) exit(1);
-				DBG_LOG("CMD_CONNECT FDL1\n");
+				DBG_LOG("CMD TERSAMBUNG MODE FDL1\n");
 #if !USE_LIBUSB
 				if (baudrate) {
 					uint8_t data[4];
 					WRITE32_BE(data, baudrate);
 					encode_msg(io, BSL_CMD_CHANGE_BAUD, data, 4);
 					if (!send_and_check(io)) {
-						DBG_LOG("CHANGE_BAUD FDL1 to %d\n", baudrate);
+						DBG_LOG("MEMERIKSA_BAUD FDL1 to %d\n", baudrate);
 						call_SetProperty(io->handle, 0, 100, (LPCVOID)&baudrate);
 					}
 				}
@@ -667,7 +667,7 @@ int main(int argc, char **argv) {
 		}
 		else if (!strcmp(str2[1], "exec")) {
 			if (fdl2_executed > 0) {
-				DBG_LOG("FDL2 ALREADY EXECUTED, SKIP\n");
+				DBG_LOG("FDL2 SUDAH DIEKSEKUSI, LEWATI\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -678,20 +678,20 @@ int main(int argc, char **argv) {
 				// Feature phones respond immediately,
 				// but it may take a second for a smartphone to respond.
 				ret = recv_msg_timeout(io, 15000);
-				if (!ret) ERR_EXIT("timeout reached\n");
+				if (!ret) ERR_EXIT("ERROR, BATAS WAKTU TERCAPAI\n");
 				ret = recv_type(io);
 				// Is it always bullshit?
 				if (ret == BSL_REP_INCOMPATIBLE_PARTITION)
 					get_Da_Info(io);
 				else if (ret != BSL_REP_ACK)
-					ERR_EXIT("unexpected response (0x%04x)\n", ret);
-				DBG_LOG("EXEC FDL2\n");
+					ERR_EXIT("ERROR, RESPON TAK TERDUGA (0x%04x)\n", ret);
+				DBG_LOG("MENGEKSEKUSI FDL2\n");
 				encode_msg(io, BSL_CMD_READ_FLASH_INFO, NULL, 0);
 				send_msg(io);
 				ret = recv_msg(io);
 				if (ret) {
 					ret = recv_type(io);
-					if (ret != BSL_REP_READ_FLASH_INFO) DBG_LOG("unexpected response (0x%04x)\n", ret);
+					if (ret != BSL_REP_READ_FLASH_INFO) DBG_LOG("ERROR RESPON TAK TERDUGA (0x%04x)\n", ret);
 					else Da_Info.dwStorageType = 0x101;
 					// need more samples to cover BSL_REP_READ_MCP_TYPE packet to nand_id/nand_info
 					// for nand_id 0x15, packet is 00 9b 00 0c 00 00 00 00 00 02 00 00 00 00 08 00
@@ -722,12 +722,12 @@ int main(int argc, char **argv) {
 				else if (Da_Info.dwStorageType == 0x102) {
 					io->ptable = partition_list(io, fn_partlist, &io->part_count);
 				}
-				else if (Da_Info.dwStorageType == 0x101) DBG_LOG("Storage is nand\n");
+				else if (Da_Info.dwStorageType == 0x101) DBG_LOG("PENYIMPANAN INI ADALAH NAND\n");
 				if (gpt_failed != 1) {
-					if (selected_ab == 2) DBG_LOG("Device is using slot b\n");
-					else if (selected_ab == 1) DBG_LOG("Device is using slot a\n");
+					if (selected_ab == 2) DBG_LOG("DEVICE MENGGUNAKAN SLOT B\n");
+					else if (selected_ab == 1) DBG_LOG("DEVICE MENGGUNAKAN SLOT A\n");
 					else {
-						DBG_LOG("Device is not using VAB\n");
+						DBG_LOG("DEVICE TIDAK MENGGUNAKAN VAB\n");
 						if (Da_Info.bSupportRawData) {
 							DBG_LOG("RAW_DATA level is %u, but DISABLED for stability, you can set it manually\n", (unsigned)Da_Info.bSupportRawData);
 							Da_Info.bSupportRawData = 0;
@@ -765,10 +765,10 @@ int main(int argc, char **argv) {
 				exec_addr = strtoul(str2[2], NULL, 0);
 				sprintf(execfile, "custom_exec_no_verify_%x.bin", exec_addr);
 				fi = fopen(execfile, "r");
-				if (fi == NULL) { DBG_LOG("%s does not exist\n", execfile); exec_addr = 0; }
+				if (fi == NULL) { DBG_LOG("%s tidak ada\n", execfile); exec_addr = 0; }
 				else fclose(fi);
 			}
-			DBG_LOG("current exec_addr is 0x%x\n", exec_addr);
+			DBG_LOG("exec_addr sekarang adalah is 0x%x\n", exec_addr);
 			if (!strcmp(str2[1], "exec_addr_new")) exec_addr_new = 1;
 			argc -= 2; argv += 2;
 		}
@@ -785,10 +785,10 @@ int main(int argc, char **argv) {
 				ret = sscanf(fn, "custom_exec_no_verify_%[0-9a-fA-F]", straddr);
 				exec_addr = strtoul(straddr, NULL, 16);
 				fi = fopen(execfile, "r");
-				if (fi == NULL) { DBG_LOG("%s does not exist\n", execfile); exec_addr = 0; }
+				if (fi == NULL) { DBG_LOG("%s tidak ada\n", execfile); exec_addr = 0; }
 				else fclose(fi);
 			}
-			DBG_LOG("current exec_addr is 0x%x\n", exec_addr);
+			DBG_LOG("exec_addr sekarang adalah 0x%x\n", exec_addr);
 			if (!strcmp(str2[1], "loadexecnew")) exec_addr_new = 1;
 			argc -= 2; argv += 2;
 
@@ -890,7 +890,7 @@ int main(int argc, char **argv) {
 
 			name = str2[2];
 			get_partition_info(io, name, 0);
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 5; argv += 5; continue; }
+			if (!gPartInfo.size) { DBG_LOG("Partisi Tidak Ada\n"); argc -= 5; argv += 5; continue; }
 
 			if (0xffffffff == size) size = check_partition(io, gPartInfo.name, 1);
 			if (offset + size < offset) { DBG_LOG("64-bit limit reached\n"); argc -= 5; argv += 5; continue; }
@@ -905,8 +905,8 @@ int main(int argc, char **argv) {
 			if (argcount <= 2) { DBG_LOG("r all/all_lite/part_name/part_id\n"); argc = 1; continue; }
 			if (!strcmp(name, "preset_modem")) {
 				if (gpt_failed == 1) io->ptable = partition_list(io, fn_partlist, &io->part_count);
-				if (!io->part_count) { DBG_LOG("Partition table not available\n"); argc -= 2; argv += 2; continue; }
-				if (selected_ab > 0) { DBG_LOG("saving slot info\n"); dump_partition(io, "misc", 0, 1048576, "misc.bin", blk_size); }
+				if (!io->part_count) { DBG_LOG("Tabel partisi tidak tersedia\n"); argc -= 2; argv += 2; continue; }
+				if (selected_ab > 0) { DBG_LOG("Menyimpan info slot\n"); dump_partition(io, "misc", 0, 1048576, "misc.bin", blk_size); }
 				for (i = 0; i < io->part_count; i++)
 					if (0 == strncmp("l_", (*(io->ptable + i)).name, 2) || 0 == strncmp("nr_", (*(io->ptable + i)).name, 3)) {
 						char dfile[40];
@@ -918,7 +918,7 @@ int main(int argc, char **argv) {
 			}
 			else if (!strcmp(name, "all")) {
 				if (gpt_failed == 1) io->ptable = partition_list(io, fn_partlist, &io->part_count);
-				if (!io->part_count) { DBG_LOG("Partition table not available\n"); argc -= 2; argv += 2; continue; }
+				if (!io->part_count) { DBG_LOG("Tabel partisi tidak tersedia\n"); argc -= 2; argv += 2; continue; }
 				dump_partition(io, "splloader", 0, 256 * 1024, "splloader.bin", blk_size ? blk_size : DEFAULT_BLK_SIZE);
 				for (i = 0; i < io->part_count; i++) {
 					char dfile[40];
@@ -933,7 +933,7 @@ int main(int argc, char **argv) {
 			}
 			else if (!strcmp(name, "all_lite")) {
 				if (gpt_failed == 1) io->ptable = partition_list(io, fn_partlist, &io->part_count);
-				if (!io->part_count) { DBG_LOG("Partition table not available\n"); argc -= 2; argv += 2; continue; }
+				if (!io->part_count) { DBG_LOG("Tabel partisi tidak tersedia\n"); argc -= 2; argv += 2; continue; }
 				dump_partition(io, "splloader", 0, 256 * 1024, "splloader.bin", blk_size ? blk_size : DEFAULT_BLK_SIZE);
 				for (i = 0; i < io->part_count; i++) {
 					char dfile[40];
@@ -957,7 +957,7 @@ rloop:
 				get_partition_info(io, name, 1);
 				if (!gPartInfo.size) {
 					if (loop_count) { name = list[--loop_count]; goto rloop; }
-					DBG_LOG("part not exist\n");
+					DBG_LOG("Partisi tidak ada\n");
 					argc -= 2; argv += 2;
 					continue;
 				}
@@ -976,7 +976,7 @@ rloop:
 			if (argcount <= 2) { DBG_LOG("read_parts partition_list_file\n"); argc = 1; continue; }
 			fn = str2[2];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 2; argv += 2; continue; }
+			if (fi == NULL) { DBG_LOG("File tidak ada.\n"); argc -= 2; argv += 2; continue; }
 			else fclose(fi);
 			dump_partitions(io, fn, nand_info, blk_size ? blk_size : DEFAULT_BLK_SIZE);
 			argc -= 2; argv += 2;
@@ -985,7 +985,7 @@ rloop:
 		else if (!strcmp(str2[1], "partition_list")) {
 			if (argcount <= 2) { DBG_LOG("partition_list FILE\n"); argc = 1; continue; }
 			if (gpt_failed == 1) io->ptable = partition_list(io, str2[2], &io->part_count);
-			if (!io->part_count) { DBG_LOG("Partition table not available\n"); argc -= 2; argv += 2; continue; }
+			if (!io->part_count) { DBG_LOG("Tabel partisi tidak tersedia\n"); argc -= 2; argv += 2; continue; }
 			else {
 				DBG_LOG("  0 %36s     256KB\n", "splloader");
 				FILE *fo = my_fopen(str2[2], "wb");
@@ -1008,7 +1008,7 @@ rloop:
 			if (argcount <= 2) { DBG_LOG("repartition FILE\n"); argc = 1; continue; }
 			fn = str2[2];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 2; argv += 2; continue; }
+			if (fi == NULL) { DBG_LOG("File Tidak Ada\n"); argc -= 2; argv += 2; continue; }
 			else fclose(fi);
 			if (skip_confirm) repartition(io, str2[2]);
 			else if (check_confirm("repartition")) repartition(io, str2[2]);
@@ -1033,7 +1033,7 @@ rloop:
 					}
 				get_partition_info(io, name, 0);
 			}
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 2; argv += 2; continue; }
+			if (!gPartInfo.size) { DBG_LOG("Partisi Tidak Ada\n"); argc -= 2; argv += 2; continue; }
 			erase_partition(io, gPartInfo.name);
 			argc -= 2; argv += 2;
 
@@ -1053,7 +1053,7 @@ rloop:
 			if (argcount <= 3) { DBG_LOG("write_part part_name/part_id FILE\n"); argc = 1; continue; }
 			fn = str2[3];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 3; argv += 3; continue; }
+			if (fi == NULL) { DBG_LOG("File Tidak Ada\n"); argc -= 3; argv += 3; continue; }
 			else fclose(fi);
 			if (!skip_confirm)
 				if (!check_confirm("write partition")) {
@@ -1061,7 +1061,7 @@ rloop:
 					continue;
 				}
 			get_partition_info(io, name, 0);
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 3; argv += 3; continue; }
+			if (!gPartInfo.size) { DBG_LOG("Partisi Tidak Ada\n"); argc -= 3; argv += 3; continue; }
 
 			load_partition_unify(io, gPartInfo.name, fn, blk_size ? blk_size : DEFAULT_BLK_SIZE);
 			argc -= 3; argv += 3;
@@ -1081,13 +1081,13 @@ rloop:
 			const char *name = str2[2];
 			if (argcount <= 3) { DBG_LOG("w_force part_name/part_id FILE\n"); argc = 1; continue; }
 			if (Da_Info.dwStorageType == 0x101) { DBG_LOG("w_force is not allowed on NAND(UBI) devices\n"); argc -= 3; argv += 3; continue; }
-			if (!io->part_count) { DBG_LOG("Partition table not available\n"); argc -= 3; argv += 3; continue; }
+			if (!io->part_count) { DBG_LOG("Tabel partisi tidak tersedia\n"); argc -= 3; argv += 3; continue; }
 			fn = str2[3];
 			fi = fopen(fn, "r");
-			if (fi == NULL) { DBG_LOG("File does not exist.\n"); argc -= 3; argv += 3; continue; }
+			if (fi == NULL) { DBG_LOG("File Tidak Ada\n"); argc -= 3; argv += 3; continue; }
 			else fclose(fi);
 			get_partition_info(io, name, 0);
-			if (!gPartInfo.size) { DBG_LOG("part not exist\n"); argc -= 3; argv += 3; continue; }
+			if (!gPartInfo.size) { DBG_LOG("Partisi Tidak Ada\n"); argc -= 3; argv += 3; continue; }
 
 			if (!memcmp(gPartInfo.name, "splloader", 9)) { DBG_LOG("blacklist!\n"); argc -= 3; argv += 3; continue; }
 			else if (isdigit(str2[2][0])) load_partition_force(io, atoi(str2[2]) - 1, fn, blk_size ? blk_size : DEFAULT_BLK_SIZE);
@@ -1158,7 +1158,7 @@ rloop:
 			if (atoi(str2[2])) dm_enable(io, blk_size ? blk_size : DEFAULT_BLK_SIZE);
 			else {
 				if (!io->part_count) {
-					DBG_LOG("Warning: disable dm-verity needs a valid partition table or a write-verification-disabled FDL2\n");
+					DBG_LOG("Peringatan: menonaktifkan dm-verity memerlukan tabel partisi yang valid atau FDL2 dengan verifikasi penulisan yang dinonaktifkan\n");
 					if (!skip_confirm)
 						if (!check_confirm("disable dm-verity")) {
 							argc -= 2; argv += 2;
@@ -1209,9 +1209,9 @@ rloop:
 			encode_msg(io, BSL_CMD_READ_CHIP_UID, NULL, 0);
 			send_msg(io);
 			ret = recv_msg(io);
-			if (!ret) ERR_EXIT("timeout reached\n");
+			if (!ret) ERR_EXIT("Error, Batas Waktu Tercapai\n");
 			if ((ret = recv_type(io)) != BSL_REP_READ_CHIP_UID) {
-				DBG_LOG("unexpected response (0x%04x)\n", ret); argc -= 1; argv += 1; continue;
+				DBG_LOG("ERROR, RESPON TAK TERDUGA (0x%04x)\n", ret); argc -= 1; argv += 1; continue;
 			}
 
 			DBG_LOG("BSL_REP_READ_CHIP_UID: ");
@@ -1255,7 +1255,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "reset")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL BELUM SIAP Y\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1265,7 +1265,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "reboot-recovery")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL BELUM SIAP Y\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1281,7 +1281,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "reboot-fastboot")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL BELUM SIAP Y\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1298,7 +1298,7 @@ rloop:
 		}
 		else if (!strcmp(str2[1], "poweroff")) {
 			if (!fdl1_loaded) {
-				DBG_LOG("FDL NOT READY\n");
+				DBG_LOG("FDL BELUM SIAP Y\n");
 				argc -= 1; argv += 1;
 				continue;
 			}
@@ -1321,7 +1321,7 @@ rloop:
 				free(str2[i]);
 		free(str2);
 		if (m_bOpened == -1) {
-			DBG_LOG("device removed, exiting...\n");
+			DBG_LOG("perangkat dilepas, keluar...\n");
 			break;
 		}
 	}
