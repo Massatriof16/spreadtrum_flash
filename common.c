@@ -34,7 +34,7 @@ DWORD *FindPort(const char *USB_DL) {
 			DWORD portNum = strtoul(portNum_str, NULL, 0);
 			DWORD *temp = (DWORD *)realloc(ports, (count + 2) * sizeof(DWORD));
 			if (temp == NULL) {
-				DBG_LOG("Memory allocation failed.\n");
+				DBG_LOG("Alokasi memori gagal.\n");
 				SetupDiDestroyDeviceInfoList(DeviceInfoSet);
 				free(ports);
 				ports = NULL;
@@ -75,7 +75,7 @@ libusb_device **FindPort(int pid) {
 		if (desc.idVendor == 0x1782 && (pid == 0 || desc.idProduct == pid)) {
 			libusb_device **temp = (libusb_device **)realloc(ports, (count + 2) * sizeof(libusb_device *));
 			if (temp == NULL) {
-				DBG_LOG("Memory allocation failed.\n");
+				DBG_LOG("Alokasi memori gagal.\n");
 				libusb_free_device_list(devs, 1);
 				free(ports);
 				ports = NULL;
@@ -146,7 +146,7 @@ void find_endpoints(libusb_device_handle *dev_handle, int result[2]) {
 	struct libusb_config_descriptor *config;
 	libusb_device *device = libusb_get_device(dev_handle);
 	if (!device)
-		ERR_EXIT("libusb_get_device failed\n");
+		ERR_EXIT("libusb_get_device gagal\n");
 	//if (libusb_get_device_descriptor(device, &desc) < 0)
 	// ERR_EXIT("libusb_get_device_descriptor failed");
 	err = libusb_get_config_descriptor(device, 0, &config);
@@ -360,7 +360,7 @@ int send_msg(spdio_t *io) {
 
 	if (m_bOpened == -1) {
 		spdio_free(io);
-		ERR_EXIT("device removed, exiting...\n");
+		ERR_EXIT("perangkat dilepas, keluar...\n");
 	}
 	if (io->verbose >= 2) {
 		DBG_LOG("send (%d):\n", io->enc_len);
@@ -379,12 +379,12 @@ int send_msg(spdio_t *io) {
 #if USE_LIBUSB
 	int err = libusb_bulk_transfer(io->dev_handle, io->endp_out, io->enc_buf, io->enc_len, &ret, io->timeout);
 	if (err < 0)
-		ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+		ERR_EXIT("usb_send gagal : %s\n", libusb_error_name(err));
 #else
 	ret = call_Write(io->handle, io->enc_buf, io->enc_len);
 #endif
 	if (ret != io->enc_len)
-		ERR_EXIT("usb_send failed (%d / %d)\n", ret, io->enc_len);
+		ERR_EXIT("usb_send gagal (%d / %d)\n", ret, io->enc_len);
 
 	return ret;
 }
@@ -401,24 +401,24 @@ int recv_msg_orig(spdio_t *io) {
 		if (pos >= len) {
 			if (m_bOpened == -1) {
 				spdio_free(io);
-				ERR_EXIT("device removed, exiting...\n");
+				ERR_EXIT("perangkat dilepas, keluar...\n");
 			}
 #if USE_LIBUSB
 			int err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &len, io->timeout);
 			if (err == LIBUSB_ERROR_NO_DEVICE)
-				ERR_EXIT("connection closed\n");
+				ERR_EXIT("koneksi ditutup\n");
 			else if (err < 0) {
-				DBG_LOG("usb_recv failed : %s\n", libusb_error_name(err)); return 0;
+				DBG_LOG("usb_recv gagal : %s\n", libusb_error_name(err)); return 0;
 			}
 #else
 			len = call_Read(io->handle, io->recv_buf, RECV_BUF_LEN, io->timeout);
 #endif
 			if (len < 0) {
-				DBG_LOG("usb_recv failed, ret = %d\n", len); return 0;
+				DBG_LOG("usb_recv gagal, ret = %d\n", len); return 0;
 			}
 
 			if (io->verbose >= 2) {
-				DBG_LOG("recv (%d):\n", len);
+				DBG_LOG("menerima (%d):\n", len);
 				print_mem(stderr, io->recv_buf, len);
 			}
 			pos = 0;
@@ -434,7 +434,7 @@ int recv_msg_orig(spdio_t *io) {
 				if (!head_found) head_found = 1;
 				else if (!nread) continue;
 				else if (nread < plen) {
-					DBG_LOG("recieved message too short\n"); return 0;
+					DBG_LOG("pesan yang diterima terlalu pendek\n"); return 0;
 				}
 				else break;
 			}
@@ -444,7 +444,7 @@ int recv_msg_orig(spdio_t *io) {
 			else {
 				if (!head_found) continue;
 				if (nread >= plen) {
-					DBG_LOG("recieved message too long\n"); return 0;
+					DBG_LOG("menerima pesan terlalu panjang\n"); return 0;
 				}
 				io->raw_buf[nread++] = a ^ esc;
 				esc = 0;
@@ -457,7 +457,7 @@ int recv_msg_orig(spdio_t *io) {
 			}
 			if (nread == plen) {
 				if (a != HDLC_HEADER) {
-					DBG_LOG("expected end of message\n"); return 0;
+					DBG_LOG("diharapkan akhir pesan\n"); return 0;
 				}
 				break;
 			}
@@ -554,10 +554,10 @@ int send_and_check(spdio_t *io) {
 	int ret;
 	send_msg(io);
 	ret = recv_msg(io);
-	if (!ret) ERR_EXIT("timeout reached\n");
+	if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 	ret = recv_type(io);
 	if (ret != BSL_REP_ACK) {
-		DBG_LOG("unexpected response (0x%04x)\n", ret);
+		DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 		return -1;
 	}
 	return 0;
@@ -618,17 +618,17 @@ size_t send_file(spdio_t *io, const char *fn,
 	unsigned src_offs, unsigned src_size) {
 	uint8_t *mem; size_t size = 0;
 	mem = loadfile(fn, &size, 0);
-	if (!mem) ERR_EXIT("loadfile(\"%s\") failed\n", fn);
-	if ((uint64_t)size >> 32) ERR_EXIT("file too big\n");
-	if (size < src_offs) ERR_EXIT("required offset larger than file size\n");
+	if (!mem) ERR_EXIT("memuat file(\"%s\") Gagal\n", fn);
+	if ((uint64_t)size >> 32) ERR_EXIT("berkas terlalu besar\n");
+	if (size < src_offs) ERR_EXIT("offset yang dibutuhkan lebih besar dari ukuran file\n");
 	size -= src_offs;
 	if (src_size) {
-		if (size < src_size) DBG_LOG("required size larger than file size\n");
+		if (size < src_size) DBG_LOG("ukuran yang dibutuhkan lebih besar dari ukuran file\n");
 		else size = src_size;
 	}
 	send_buf(io, start_addr, end_data, step, mem + src_offs, size);
 	free(mem);
-	DBG_LOG("SEND %s to 0x%x\n", fn, start_addr);
+	DBG_LOG("MENGIRIM %s KE 0x%x\n", fn, start_addr);
 	return size;
 }
 
@@ -664,9 +664,9 @@ unsigned dump_flash(spdio_t *io,
 		encode_msg(io, BSL_CMD_READ_FLASH, data, 4 * 3);
 		send_msg(io);
 		ret = recv_msg(io);
-		if (!ret) ERR_EXIT("timeout reached\n");
+		if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 		if ((ret = recv_type(io)) != BSL_REP_READ_FLASH) {
-			DBG_LOG("unexpected response (0x%04x)\n", ret);
+			DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 			break;
 		}
 		nread = READ16_BE(io->raw_buf + 2);
@@ -677,7 +677,7 @@ unsigned dump_flash(spdio_t *io,
 		offset += nread;
 		if (n != nread) break;
 	}
-	DBG_LOG("Read Flash Done: 0x%08x+0x%x, target: 0x%x, read: 0x%x\n", addr, start, len, offset - start);
+	DBG_LOG("Baca Flash Selesai: 0x%08x+0x%x, target: 0x%x, dibaca: 0x%x\n", addr, start, len, offset - start);
 	fclose(fo);
 	return offset;
 }
@@ -701,9 +701,9 @@ unsigned dump_mem(spdio_t *io,
 		encode_msg(io, BSL_CMD_READ_FLASH, data, sizeof(data));
 		send_msg(io);
 		ret = recv_msg(io);
-		if (!ret) ERR_EXIT("timeout reached\n");
+		if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 		if ((ret = recv_type(io)) != BSL_REP_READ_FLASH) {
-			DBG_LOG("unexpected response (0x%04x)\n", ret);
+			DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 			break;
 		}
 		nread = READ16_BE(io->raw_buf + 2);
@@ -714,7 +714,7 @@ unsigned dump_mem(spdio_t *io,
 		offset += nread;
 		if (n != nread) break;
 	}
-	DBG_LOG("Read Mem Done: 0x%08x, target: 0x%x, read: 0x%x\n", start, len, offset - start);
+	DBG_LOG("Baca Mem Selesai: 0x%08x, target: 0x%x, dibaca: 0x%x\n", start, len, offset - start);
 	fclose(fo);
 	return offset;
 }
@@ -741,7 +741,7 @@ void select_partition(spdio_t *io, const char *name,
 	int ret;
 
 	ret = copy_to_wstr(pkt.name, sizeof(pkt.name) / 2, name);
-	if (ret) ERR_EXIT("name too long\n");
+	if (ret) ERR_EXIT("nama terlalu panjang\n");
 	n64 = size;
 	WRITE32_LE(&pkt.size, n64);
 	if (mode64) {
@@ -813,14 +813,14 @@ uint64_t dump_partition(spdio_t *io,
 		encode_msg(io, BSL_CMD_READ_MIDST, data, mode64 ? 12 : 8);
 		send_msg(io);
 		ret = recv_msg(io);
-		if (!ret) ERR_EXIT("timeout reached\n");
+		if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 		if ((ret = recv_type(io)) != BSL_REP_READ_FLASH) {
-			DBG_LOG("unexpected response (0x%04x)\n", ret);
+			DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 			break;
 		}
 		nread = READ16_BE(io->raw_buf + 2);
 		if (n < nread)
-			ERR_EXIT("unexpected length\n");
+			ERR_EXIT("panjang tak terduga\n");
 		if (fwrite(io->raw_buf + 4, 1, nread, fo) != nread)
 			ERR_EXIT("fwrite(dump) failed\n");
 		print_progress_bar((offset + nread - start) / (float)len);
@@ -832,7 +832,7 @@ uint64_t dump_partition(spdio_t *io,
 			if (saved_size >= fblk_size) { usleep(1000000); saved_size = 0; }
 		}
 	}
-	DBG_LOG("Read Part Done: %s+0x%llx, target: 0x%llx, read: 0x%llx\n",
+	DBG_LOG("Baca Partisi Selesai: %s+0x%llx, target: 0x%llx, dibaca: 0x%llx\n",
 		name, (long long)start, (long long)len,
 		(long long)(offset - start));
 	fclose(fo);
@@ -859,15 +859,15 @@ uint64_t read_pactime(spdio_t *io) {
 	encode_msg(io, BSL_CMD_READ_MIDST, data, sizeof(data));
 	send_msg(io);
 	ret = recv_msg(io);
-	if (!ret) ERR_EXIT("timeout reached\n");
+	if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 	if ((ret = recv_type(io)) != BSL_REP_READ_FLASH) {
-		DBG_LOG("unexpected response (0x%04x)\n", ret);
+		DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 		encode_msg(io, BSL_CMD_READ_END, NULL, 0);
 		send_and_check(io);
 		return 0;
 	}
 	n = READ16_BE(io->raw_buf + 2);
-	if (n != len) ERR_EXIT("unexpected length\n");
+	if (n != len) ERR_EXIT("panjang tak terduga\n");
 
 	time = (uint32_t)READ32_LE(io->raw_buf + 4);
 	time |= (uint64_t)READ32_LE(io->raw_buf + 8) << 32;
@@ -1027,8 +1027,8 @@ int gpt_info(partition_t *ptable, const char *fn_xml, int *part_count_ptr) {
 	free(entries);
 	fclose(fp);
 	*part_count_ptr = n;
-	DBG_LOG("standard gpt table saved to pgpt.bin\n");
-	DBG_LOG("skip saving sprd partition list packet\n");
+	DBG_LOG("tabel gpt standar disimpan ke pgpt.bin\n");
+	DBG_LOG("lewati penyimpanan daftar partisi sprd paket\n");
 	return 0;
 }
 
@@ -1053,10 +1053,10 @@ partition_t *partition_list(spdio_t *io, const char *fn, int *part_count_ptr) {
 		encode_msg(io, BSL_CMD_READ_PARTITION, NULL, 0);
 		send_msg(io);
 		ret = recv_msg(io);
-		if (!ret) ERR_EXIT("timeout reached\n");
+		if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 		ret = recv_type(io);
 		if (ret != BSL_REP_READ_PARTITION) {
-			DBG_LOG("unexpected response (0x%04x)\n", ret);
+			DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 			gpt_failed = -1;
 			free(ptable);
 			return NULL;
@@ -1110,15 +1110,15 @@ partition_t *partition_list(spdio_t *io, const char *fn, int *part_count_ptr) {
 			fclose(fo);
 		}
 		*part_count_ptr = n;
-		DBG_LOG("unable to get standard gpt table\n");
-		DBG_LOG("sprd partition list packet saved to sprdpart.bin\n");
+		DBG_LOG("tidak bisa mendapatkan tabel gpt standar\n");
+		DBG_LOG("daftar partisi sprd paket disimpan ke sprdpart.bin\n");
 		gpt_failed = 0;
 	}
 	if (*part_count_ptr) {
-		if (strcmp(fn, "-")) DBG_LOG("partition list saved to %s\n", fn);
-		DBG_LOG("Total number of partitions: %d\n", *part_count_ptr);
-		if (Da_Info.dwStorageType == 0x102) DBG_LOG("Storage is emmc\n");
-		else if (Da_Info.dwStorageType == 0x103) DBG_LOG("Storage is ufs\n");
+		if (strcmp(fn, "-")) DBG_LOG("daftar partisi disimpan ke %s\n", fn);
+		DBG_LOG("Jumlah total partisi: %d\n", *part_count_ptr);
+		if (Da_Info.dwStorageType == 0x102) DBG_LOG("Memori device adalah EMMC\n");
+		else if (Da_Info.dwStorageType == 0x103) DBG_LOG("Memori Device adalah UFS\n");
 		return ptable;
 	}
 	else {
@@ -1159,7 +1159,7 @@ void erase_partition(spdio_t *io, const char *name) {
 		select_partition(io, name, 0, 0, BSL_CMD_ERASE_FLASH);
 		strcpy(name0, name);
 	}
-	if (!send_and_check(io)) DBG_LOG("Erase Part Done: %s\n", name0);
+	if (!send_and_check(io)) DBG_LOG("Hapus Partisi Selesai: %s\n", name0);
 	io->timeout = timeout0;
 }
 
@@ -1182,7 +1182,7 @@ void load_partition(spdio_t *io, const char *name,
 	fseeko(fi, 0, SEEK_END);
 	len = ftello(fi);
 	fseek(fi, 0, SEEK_SET);
-	DBG_LOG("file size : 0x%llx\n", (long long)len);
+	DBG_LOG("ukuran berkas : 0x%llx\n", (long long)len);
 
 	mode64 = len >> 32;
 	select_partition(io, name, len, mode64, BSL_CMD_START_DATA);
@@ -1202,7 +1202,7 @@ void load_partition(spdio_t *io, const char *name,
 			n = (unsigned)(n64 > step ? step : n64);
 			if (m_bOpened == -1) {
 				spdio_free(io);
-				ERR_EXIT("device removed, exiting...\n");
+				ERR_EXIT("perangkat dilepas, keluar...\n");
 			}
 			if (Da_Info.bSupportRawData == 1) {
 				uint32_t data[3];
@@ -1220,21 +1220,21 @@ void load_partition(spdio_t *io, const char *name,
 				ERR_EXIT("fread(load) failed\n");
 #if USE_LIBUSB
 			int err = libusb_bulk_transfer(io->dev_handle, io->endp_out, rawbuf, n, &ret, io->timeout); //libusb will fail with rawbuf
-			if (err < 0) ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+			if (err < 0) ERR_EXIT("usb_send gagal : %s\n", libusb_error_name(err));
 #else
 			ret = call_Write(io->handle, rawbuf, n);
 #endif
-			if (io->verbose >= 1) DBG_LOG("send (%d)\n", n);
+			if (io->verbose >= 1) DBG_LOG("mengirim (%d)\n", n);
 			if (ret != (int)n)
-				ERR_EXIT("usb_send failed (%d / %d)\n", ret, n);
+				ERR_EXIT("usb_send gagal (%d / %d)\n", ret, n);
 			if (is_simg) ret = recv_msg_timeout(io, 100000);
 			else ret = recv_msg_timeout(io, 15000);
 			if (!ret) {
-				if (n == n64) ERR_EXIT("signature verification of \"%s\" failed or timeout reached\n", name);
-				else ERR_EXIT("timeout reached\n");
+				if (n == n64) ERR_EXIT("verifikasi tanda tangan \"%s\" gagal or Batas Waktu Tercapai!\n", name);
+				else ERR_EXIT("Batas Waktu Tercapai!\n");
 			}
 			if ((ret = recv_type(io)) != BSL_REP_ACK) {
-				DBG_LOG("unexpected response (0x%04x)\n", ret);
+				DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 				break;
 			}
 			print_progress_bar((offset + n) / (float)len);
@@ -1253,11 +1253,11 @@ fallback_load:
 			if (is_simg) ret = recv_msg_timeout(io, 100000);
 			else ret = recv_msg_timeout(io, 15000);
 			if (!ret) {
-				if (n == n64) ERR_EXIT("signature verification of \"%s\" failed or timeout reached\n", name);
-				else ERR_EXIT("timeout reached\n");
+				if (n == n64) ERR_EXIT("verifikasi tanda tangan \"%s\" gagal or Batas Waktu Tercapai!\n", name);
+				else ERR_EXIT("Batas Waktu Tercapai!\n");
 			}
 			if ((ret = recv_type(io)) != BSL_REP_ACK) {
-				DBG_LOG("unexpected response (0x%04x)\n", ret);
+				DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 				break;
 			}
 			print_progress_bar((offset + n) / (float)len);
@@ -1267,7 +1267,7 @@ fallback_load:
 #endif
 	fclose(fi);
 	encode_msg(io, BSL_CMD_END_DATA, NULL, 0);
-	if (!send_and_check(io)) DBG_LOG("Write Part Done: %s, target: 0x%llx, written: 0x%llx\n",
+	if (!send_and_check(io)) DBG_LOG("Tulis Partisi Selesai: %s, target: 0x%llx, tertulis: 0x%llx\n",
 		name, (long long)len, (long long)offset);
 }
 
@@ -1302,7 +1302,7 @@ void load_partition_force(spdio_t *io, const int id, const char *fn, unsigned st
 		buf += 0x4c;
 	}
 	encode_msg(io, BSL_CMD_REPARTITION, io->temp_buf, io->part_count * 0x4c);
-	if (!send_and_check(io)) DBG_LOG("Force Write %s Done\n", (*(io->ptable + id)).name);
+	if (!send_and_check(io)) DBG_LOG("Paksa Tulis %s Selesai\n", (*(io->ptable + id)).name);
 }
 
 unsigned short const crc16_table[256] = {
@@ -1356,7 +1356,7 @@ void load_nv_partition(spdio_t *io, const char *name,
 	uint32_t cs = 0;
 
 	mem = loadfile(fn, &len, 0);
-	if (!mem) ERR_EXIT("loadfile(\"%s\") failed\n", fn);
+	if (!mem) ERR_EXIT("memuat file(\"%s\") gagal\n", fn);
 
 	uint8_t *mem0 = mem;
 	if (*(uint32_t *)mem == 0x4e56) mem += 0x200;
@@ -1368,7 +1368,7 @@ void load_nv_partition(spdio_t *io, const char *name,
 		tmp[0] = 0;
 		tmp[1] = 0;
 		memcpy(tmp, mem + len, sizeof(tmp));
-		if (!tmp[1]) { DBG_LOG("broken NV file, skipping!\n"); return; }
+		if (!tmp[1]) { DBG_LOG("file NV rusak, terlewati!\n"); return; }
 		len += sizeof(tmp);
 		len += tmp[1];
 
@@ -1382,14 +1382,14 @@ void load_nv_partition(spdio_t *io, const char *name,
 	crc = crc16(crc, mem + 2, len - 2);
 	WRITE16_BE(mem, crc);
 	for (offset = 0; offset < len; offset++) cs += mem[offset];
-	DBG_LOG("file size : 0x%zx\n", len);
+	DBG_LOG("ukuran berkas : 0x%zx\n", len);
 
 	struct {
 		uint16_t name[36];
 		uint32_t size, cs;
 	} pkt = { 0 };
 	ret = copy_to_wstr(pkt.name, sizeof(pkt.name) / 2, name);
-	if (ret) ERR_EXIT("name too long\n");
+	if (ret) ERR_EXIT("nama terlalu panjang\n");
 	WRITE32_LE(&pkt.size, len);
 	WRITE32_LE(&pkt.cs, cs);
 	encode_msg(io, BSL_CMD_START_DATA, &pkt, sizeof(pkt));
@@ -1401,9 +1401,9 @@ void load_nv_partition(spdio_t *io, const char *name,
 		encode_msg(io, BSL_CMD_MIDST_DATA, io->temp_buf, n);
 		send_msg(io);
 		ret = recv_msg_timeout(io, 15000);
-		if (!ret) ERR_EXIT("timeout reached\n");
+		if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 		if ((ret = recv_type(io)) != BSL_REP_ACK) {
-			DBG_LOG("unexpected response (0x%04x)\n", ret);
+			DBG_LOG("respon tak terduga (0x%04x)\n", ret);
 			break;
 		}
 	}
@@ -1430,11 +1430,11 @@ void find_partition_size_new(spdio_t *io, const char *name, unsigned long long *
 	encode_msg(io, BSL_CMD_READ_MIDST, data, 8);
 	send_msg(io);
 	ret = recv_msg(io);
-	if (!ret) ERR_EXIT("timeout reached\n");
+	if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 	if (recv_type(io) == BSL_REP_READ_FLASH) {
 		ret = sscanf((char *)(io->raw_buf + 4), "size:%*[^:]: 0x%llx", offset_ptr);
-		if (ret != 1) ret = sscanf((char *)(io->raw_buf + 4), "partition %*s total size: 0x%llx", offset_ptr); // new lk
-		DBG_LOG("partition_size_device: %s, 0x%llx\n", name, *offset_ptr);
+		if (ret != 1) ret = sscanf((char *)(io->raw_buf + 4), "partisi %*s ukuran total: 0x%llx", offset_ptr); // new lk
+		DBG_LOG("partisi_ukuran_perangkat: %s, 0x%llx\n", name, *offset_ptr);
 	}
 	encode_msg(io, BSL_CMD_READ_END, NULL, 0);
 	send_and_check(io);
@@ -1485,7 +1485,7 @@ uint64_t check_partition(spdio_t *io, const char *name, int need_size) {
 	encode_msg(io, BSL_CMD_READ_MIDST, data, 8);
 	send_msg(io);
 	ret = recv_msg(io);
-	if (!ret) ERR_EXIT("timeout reached\n");
+	if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 	if (recv_type(io) == BSL_REP_READ_FLASH) ret = 1;
 	else ret = 0;
 	encode_msg(io, BSL_CMD_READ_END, NULL, 0);
@@ -1504,7 +1504,7 @@ uint64_t check_partition(spdio_t *io, const char *name, int need_size) {
 			select_partition(io, name, n64, 0, BSL_CMD_READ_START);
 			send_msg(io);
 			ret = recv_msg(io);
-			if (!ret) ERR_EXIT("timeout reached\n");
+			if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 			ret = recv_type(io);
 			if (incrementing) {
 				if (ret != BSL_REP_ACK) {
@@ -1535,7 +1535,7 @@ uint64_t check_partition(spdio_t *io, const char *name, int need_size) {
 			encode_msg(io, BSL_CMD_READ_MIDST, data, sizeof(data));
 			send_msg(io);
 			ret = recv_msg(io);
-			if (!ret) ERR_EXIT("timeout reached\n");
+			if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 			ret = recv_type(io);
 			if (incrementing) {
 				if (ret != BSL_REP_READ_FLASH) {
@@ -1574,7 +1574,7 @@ void get_partition_info(spdio_t *io, const char *name, int need_size) {
 		}
 		if (gpt_failed == 1) io->ptable = partition_list(io, fn_partlist, &io->part_count);
 		if (i > io->part_count) {
-			DBG_LOG("part not exist\n");
+			DBG_LOG("Partisi Tidak ada!\n");
 			gPartInfo.size = 0;
 			io->verbose = verbose;
 			return;
@@ -1614,7 +1614,7 @@ void get_partition_info(spdio_t *io, const char *name, int need_size) {
 		name = name_ab;
 	}
 	if (!gPartInfo.size) {
-		DBG_LOG("part not exist\n");
+		DBG_LOG("Partisi Tidak ada!\n");
 		io->verbose = verbose;
 		return;
 	}
@@ -1672,7 +1672,7 @@ void dump_partitions(spdio_t *io, const char *fn, int *nand_info, unsigned step)
 
 	if (!memcmp(fn, "ubi", 3)) ubi = 1;
 	src = (char *)loadfile(fn, &size, 1);
-	if (!src) ERR_EXIT("loadfile failed\n");
+	if (!src) ERR_EXIT("memuat file gagal\n");
 	src[size] = 0;
 	p = src;
 
@@ -1701,7 +1701,7 @@ void dump_partitions(spdio_t *io, const char *fn, int *nand_info, unsigned step)
 			if (stage > 2)
 				ERR_EXIT("xml: more than one partition lists\n");
 			p = strchr(p, '>');
-			if (!p) ERR_EXIT("xml: unexpected syntax\n");
+			if (!p) ERR_EXIT("xml: sintaksis tak terduga\n");
 			p++;
 			continue;
 		}
@@ -1720,10 +1720,10 @@ void dump_partitions(spdio_t *io, const char *fn, int *nand_info, unsigned step)
 		if (found >= 128) break;
 	}
 	if (p - 1 != src + size) ERR_EXIT("xml: zero byte");
-	if (stage != 2) ERR_EXIT("xml: unexpected syntax\n");
+	if (stage != 2) ERR_EXIT("xml: sintaksis tak terduga\n");
 
 	for (int i = 0; i < found; i++) {
-		DBG_LOG("Partition %d: name=%s, size=%llim\n", i + 1, partitions[i].name, partitions[i].size);
+		DBG_LOG("Partisi %d: nama=%s, ukuran=%llim\n", i + 1, partitions[i].name, partitions[i].size);
 		if (!memcmp(partitions[i].name, "userdata", 8)) continue;
 
 		get_partition_info(io, partitions[i].name, 0);
@@ -1740,7 +1740,7 @@ void dump_partitions(spdio_t *io, const char *fn, int *nand_info, unsigned step)
 		snprintf(dfile, sizeof(dfile), "%s.bin", partitions[i].name);
 		dump_partition(io, gPartInfo.name, 0, gPartInfo.size, dfile, step);
 	}
-	if (selected_ab > 0) { DBG_LOG("saving slot info\n"); dump_partition(io, "misc", 0, 1048576, "misc.bin", step); }
+	if (selected_ab > 0) { DBG_LOG("Menyimpan info slot\n"); dump_partition(io, "misc", 0, 1048576, "misc.bin", step); }
 
 	if (savepath[0]) {
 		DBG_LOG("saving dump list\n");
@@ -1973,7 +1973,7 @@ void select_ab(spdio_t *io) {
 	encode_msg(io, BSL_CMD_READ_MIDST, data, 8);
 	send_msg(io);
 	ret = recv_msg(io);
-	if (!ret) ERR_EXIT("timeout reached\n");
+	if (!ret) ERR_EXIT("Batas Waktu Tercapai!\n");
 	if (recv_type(io) == BSL_REP_READ_FLASH) abc = (bootloader_control *)(io->raw_buf + 4);
 	encode_msg(io, BSL_CMD_READ_END, NULL, 0);
 	send_and_check(io);
@@ -2044,8 +2044,8 @@ uint32_t crc32(uint32_t crc_in, const uint8_t *buf, int size) {
 
 void w_mem_to_part_offset(spdio_t *io, const char *name, size_t offset, uint8_t *mem, size_t length, unsigned step) {
 	get_partition_info(io, name, 1);
-	if (!gPartInfo.size) { DBG_LOG("part not exist\n"); return; }
-	else if (gPartInfo.size > 0xffffffff) { DBG_LOG("part too large\n"); return; }
+	if (!gPartInfo.size) { DBG_LOG("Partisi tidak ada\n"); return; }
+	else if (gPartInfo.size > 0xffffffff) { DBG_LOG("partisi terlalu besar\n"); return; }
 
 	char dfile[40];
 	snprintf(dfile, sizeof(dfile), "%s.bin", name);
@@ -2251,18 +2251,18 @@ DWORD WINAPI ThrdFunc(LPVOID lpParam) {
 
 #if !USE_LIBUSB
 void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
-	if (bootmode >= 0x80) ERR_EXIT("mode not exist\n");
+	if (bootmode >= 0x80) ERR_EXIT("mode tidak ada\n");
 	DWORD bytes_written, bytes_read;
 	int done = 0, count = 0;
 
 	while (done != 1) {
-		DBG_LOG("Waiting for boot_diag/cali_diag/dl_diag connection (%ds)\n", ms / 1000);
+		DBG_LOG("Menunggu koneksi boot_diag/cali_diag/dl_diag (%ds)\n", ms / 1000);
 		for (int i = 0; ; i++) {
 			if (curPort) {
-				if (!call_ConnectChannel(io->handle, curPort)) ERR_EXIT("Connection failed\n");
+				if (!call_ConnectChannel(io->handle, curPort)) ERR_EXIT("Koneksi Gagal\n");
 				break;
 			}
-			if (100 * i >= ms) ERR_EXIT("find port failed\n");
+			if (100 * i >= ms) ERR_EXIT("menemukan port gagal\n");
 			usleep(100000);
 		}
 
@@ -2270,14 +2270,14 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 		if (!bootmode) {
 			uint8_t hello[10] = { 0x7e,0x7e, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e, 0x7e };
 
-			if (!(bytes_written = call_Write(io->handle, hello, sizeof(hello)))) ERR_EXIT("Error writing to serial port\n");
+			if (!(bytes_written = call_Write(io->handle, hello, sizeof(hello)))) ERR_EXIT("Kesalahan saat menulis ke port serial\n");
 			if (io->verbose >= 2) {
-				DBG_LOG("send (%d):\n", (int)sizeof(hello));
+				DBG_LOG("mengirim (%d):\n", (int)sizeof(hello));
 				print_mem(stderr, hello, sizeof(hello));
 			}
-			if (!(bytes_read = call_Read(io->handle, io->recv_buf, RECV_BUF_LEN, io->timeout))) ERR_EXIT("read response from boot mode failed\n");
+			if (!(bytes_read = call_Read(io->handle, io->recv_buf, RECV_BUF_LEN, io->timeout))) ERR_EXIT("membaca respons dari mode boot gagal\n");
 			if (io->verbose >= 2) {
-				DBG_LOG("read (%d):\n", bytes_read);
+				DBG_LOG("membaca (%d):\n", bytes_read);
 				print_mem(stderr, io->recv_buf, bytes_read);
 			}
 			if (io->recv_buf[2] == BSL_REP_VER ||
@@ -2298,14 +2298,14 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 		else if (at) payload[8] = 0x81;
 		else payload[8] = bootmode + 0x80;
 
-		if (!(bytes_written = call_Write(io->handle, payload, sizeof(payload)))) ERR_EXIT("Error writing to serial port\n");
+		if (!(bytes_written = call_Write(io->handle, payload, sizeof(payload)))) ERR_EXIT("Kesalahan saat menulis ke port serial\n");
 		if (io->verbose >= 2) {
-			DBG_LOG("send (%d):\n", (int)sizeof(payload));
+			DBG_LOG("mengirim (%d):\n", (int)sizeof(payload));
 			print_mem(stderr, payload, sizeof(payload));
 		}
 		if ((bytes_read = call_Read(io->handle, io->recv_buf, RECV_BUF_LEN, io->timeout))) {
 			if (io->verbose >= 2) {
-				DBG_LOG("read (%d):\n", bytes_read);
+				DBG_LOG("membaca (%d):\n", bytes_read);
 				print_mem(stderr, io->recv_buf, bytes_read);
 			}
 			if (io->recv_buf[2] == BSL_REP_VER ||
@@ -2327,12 +2327,12 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 				usleep(500000);
 				if ((bytes_written = call_Write(io->handle, autod, sizeof(autod)))) {
 					if (io->verbose >= 2) {
-						DBG_LOG("send (%d):\n", (int)sizeof(autod));
+						DBG_LOG("mengirim (%d):\n", (int)sizeof(autod));
 						print_mem(stderr, autod, sizeof(autod));
 					}
 					if ((bytes_read = call_Read(io->handle, io->recv_buf, RECV_BUF_LEN, io->timeout))) {
 						if (io->verbose >= 2) {
-							DBG_LOG("read (%d):\n", bytes_read);
+							DBG_LOG("membaca (%d):\n", bytes_read);
 							print_mem(stderr, io->recv_buf, bytes_read);
 						}
 						done = -1;
@@ -2342,7 +2342,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 		}
 		DWORD *temp = (DWORD *)realloc(kick_ports, (count + 2) * sizeof(DWORD));
 		if (temp == NULL) {
-			DBG_LOG("Memory allocation failed.\n");
+			DBG_LOG("Alokasi memori gagal.\n");
 			free(kick_ports);
 			kick_ports = NULL;
 			return;
@@ -2361,7 +2361,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 			}
 			if (i >= 100) {
 				if (io->recv_buf[2] == BSL_REP_VER) return;
-				else ERR_EXIT("kick reboot timeout, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
+				else ERR_EXIT("kick reboot timeout, boot ulang ponsel Anda dengan menekan POWER dan VOL_UP selama 7-10 detik.\n");
 			}
 			usleep(100000);
 		}
@@ -2433,18 +2433,18 @@ void stopUsbEventHandle(void) {
 #endif
 void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 	int err, bytes_written, bytes_read;
-	if (bootmode >= 0x80) ERR_EXIT("mode not exist\n");
+	if (bootmode >= 0x80) ERR_EXIT("mode tidak ada\n");
 	int done = 0, count = 0;
 
 	while (done != 1) {
-		DBG_LOG("Waiting for boot_diag/cali_diag/dl_diag connection (%ds)\n", ms / 1000);
+		DBG_LOG("Menunggu koneksi boot_diag/cali_diag/dl_diag (%ds)\n", ms / 1000);
 		for (int i = 0; ; i++) {
 			if (curPort) {
-				if (libusb_open(curPort, &io->dev_handle) < 0) ERR_EXIT("Connection failed\n");
+				if (libusb_open(curPort, &io->dev_handle) < 0) ERR_EXIT("Koneksi Gagal\n");
 				call_Initialize_libusb(io);
 				break;
 			}
-			if (100 * i >= ms) ERR_EXIT("find port failed\n");
+			if (100 * i >= ms) ERR_EXIT("menemukan port gagal\n");
 			usleep(100000);
 		}
 
@@ -2454,19 +2454,19 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 
 			err = libusb_bulk_transfer(io->dev_handle, io->endp_out, hello, sizeof(hello), &bytes_written, io->timeout);
 			if (err < 0)
-				ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+				ERR_EXIT("usb_send gagal : %s\n", libusb_error_name(err));
 			if (io->verbose >= 2) {
-				DBG_LOG("send (%d):\n", (int)sizeof(hello));
+				DBG_LOG("mengirim (%d):\n", (int)sizeof(hello));
 				print_mem(stderr, hello, sizeof(hello));
 			}
 			err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &bytes_read, io->timeout);
 			if (err == LIBUSB_ERROR_NO_DEVICE)
-				ERR_EXIT("connection closed\n");
+				ERR_EXIT("koneksi ditutup\n");
 			else if (err < 0)
-				ERR_EXIT("usb_recv failed : %s\n", libusb_error_name(err));
-			if (!bytes_read) ERR_EXIT("read response from boot mode failed\n");
+				ERR_EXIT("usb_recv gagal: %s\n", libusb_error_name(err));
+			if (!bytes_read) ERR_EXIT("membaca respons dari mode boot gagal\n");
 			if (io->verbose >= 2) {
-				DBG_LOG("read (%d):\n", bytes_read);
+				DBG_LOG("membaca (%d):\n", bytes_read);
 				print_mem(stderr, io->recv_buf, bytes_read);
 			}
 			if (io->recv_buf[2] == BSL_REP_VER ||
@@ -2478,7 +2478,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 				else {
 					chk2 = spd_checksum(0, io->recv_buf + 1, bytes_read - 4, CHK_ORIG);
 					if (a == chk2) fdl1_loaded = 1;
-					else ERR_EXIT("bad checksum (0x%04x, expected 0x%04x or 0x%04x)\n", a, chk1, chk2);
+					else ERR_EXIT("checksum buruk (0x%04x, mengharapkan 0x%04x or 0x%04x)\n", a, chk1, chk2);
 				}
 				return;
 			}
@@ -2489,19 +2489,19 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 
 		err = libusb_bulk_transfer(io->dev_handle, io->endp_out, payload, sizeof(payload), &bytes_written, io->timeout);
 		if (err < 0)
-			ERR_EXIT("usb_send failed : %s\n", libusb_error_name(err));
+			ERR_EXIT("usb_send gagal : %s\n", libusb_error_name(err));
 		if (io->verbose >= 2) {
-			DBG_LOG("send (%d):\n", (int)sizeof(payload));
+			DBG_LOG("mengirim (%d):\n", (int)sizeof(payload));
 			print_mem(stderr, payload, sizeof(payload));
 		}
 		err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &bytes_read, io->timeout);
 		if (err == LIBUSB_ERROR_NO_DEVICE)
-			DBG_LOG("connection closed\n");
+			DBG_LOG("koneksi ditutup\n");
 		else if (err < 0)
-			ERR_EXIT("usb_recv failed : %s\n", libusb_error_name(err));
+			ERR_EXIT("usb_recv gagal : %s\n", libusb_error_name(err));
 		else if (bytes_read) {
 			if (io->verbose >= 2) {
-				DBG_LOG("read (%d):\n", bytes_read);
+				DBG_LOG("membaca (%d):\n", bytes_read);
 				print_mem(stderr, io->recv_buf, bytes_read);
 			}
 			if (io->recv_buf[2] == BSL_REP_VER ||
@@ -2513,7 +2513,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 				else {
 					chk2 = spd_checksum(0, io->recv_buf + 1, bytes_read - 4, CHK_ORIG);
 					if (a == chk2) fdl1_loaded = 1;
-					else ERR_EXIT("bad checksum (0x%04x, expected 0x%04x or 0x%04x)\n", a, chk1, chk2);
+					else ERR_EXIT("checksum buruk (0x%04x, mengharapkan 0x%04x or 0x%04x)\n", a, chk1, chk2);
 				}
 				if (io->recv_buf[2] == BSL_REP_VER) { if (io->recv_buf[9] < '4') return; }
 				else return;
@@ -2524,17 +2524,17 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 				err = libusb_bulk_transfer(io->dev_handle, io->endp_out, autod, sizeof(autod), &bytes_written, io->timeout);
 				if (err >= 0) {
 					if (io->verbose >= 2) {
-						DBG_LOG("send (%d):\n", (int)sizeof(autod));
+						DBG_LOG("mengirim (%d):\n", (int)sizeof(autod));
 						print_mem(stderr, autod, sizeof(autod));
 					}
 					err = libusb_bulk_transfer(io->dev_handle, io->endp_in, io->recv_buf, RECV_BUF_LEN, &bytes_read, io->timeout);
 					if (err == LIBUSB_ERROR_NO_DEVICE)
-						DBG_LOG("connection closed\n");
+						DBG_LOG("koneksi ditutup\n");
 					else if (err < 0)
-						ERR_EXIT("usb_recv failed : %s\n", libusb_error_name(err));
+						ERR_EXIT("usb_recv gagal : %s\n", libusb_error_name(err));
 					else if (bytes_read) {
 						if (io->verbose >= 2) {
-							DBG_LOG("read (%d):\n", bytes_read);
+							DBG_LOG("membaca (%d):\n", bytes_read);
 							print_mem(stderr, io->recv_buf, bytes_read);
 						}
 						done = -1;
@@ -2544,7 +2544,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 		}
 		libusb_device **temp = (libusb_device **)realloc(kick_ports, (count + 2) * sizeof(libusb_device *));
 		if (temp == NULL) {
-			DBG_LOG("Memory allocation failed.\n");
+			DBG_LOG("Alokasi memori gagal.\n");
 			free(kick_ports);
 			kick_ports = NULL;
 			return;
@@ -2563,7 +2563,7 @@ void ChangeMode(spdio_t *io, int ms, int bootmode, int at) {
 			}
 			if (i >= 100) {
 				if (io->recv_buf[2] == BSL_REP_VER) return;
-				else ERR_EXIT("kick reboot timeout, reboot your phone by pressing POWER and VOL_UP for 7-10 seconds.\n");
+				else ERR_EXIT("kick reboot timeout, boot ulang ponsel Anda dengan menekan POWER dan VOL_UP selama 7-10 detik.\n");
 			}
 			usleep(100000);
 		}
@@ -2578,8 +2578,8 @@ void call_Initialize_libusb(spdio_t *io) {
 	io->endp_in = endpoints[0];
 	io->endp_out = endpoints[1];
 	int ret = libusb_control_transfer(io->dev_handle, 0x21, 34, 0x601, 0, NULL, 0, io->timeout);
-	if (ret < 0) ERR_EXIT("libusb_control_transfer failed : %s\n", libusb_error_name(ret));
-	DBG_LOG("libusb_control_transfer ok\n");
+	if (ret < 0) ERR_EXIT("libusb_control_transfer gagal : %s\n", libusb_error_name(ret));
+	DBG_LOG("libusb_kontrol_transfer oke\n");
 	m_bOpened = 1;
 }
 #endif
