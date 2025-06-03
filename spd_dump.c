@@ -461,9 +461,9 @@ int main(int argc, char **argv) {
 			if (fdl2_executed > 0)
 				DBG_LOG("MODE FDL2 =>");
 			else if (fdl1_loaded > 0)
-				DBG_LOG("MIDE FDL1 =>");
+				DBG_LOG("MODE FDL1 =>");
 			else
-				DBG_LOG("MIDE BROM =>");
+				DBG_LOG("MODE BROM =>");
 			ret = scanf("%[^\n]", str1);
 			while ('\n' != getchar());
 
