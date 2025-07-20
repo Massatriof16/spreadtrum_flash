@@ -1287,6 +1287,22 @@ rloop:
 			if (!send_and_check(io)) break;
 
 		}
+		else if (!strcmp(str2[1], "reboot-bootloader")) {
+			if (!fdl1_loaded) {
+				DBG_LOG("FDL NOT READY\n");
+				argc -= 1; argv += 1;
+				continue;
+			}
+			char *miscbuf = malloc(0x800);
+			if (!miscbuf) ERR_EXIT("malloc failed\n");
+			memset(miscbuf, 0, 0x800);
+			strcpy(miscbuf, "bootonce-bootloader ");
+			w_mem_to_part_offset(io, "misc", 0, (uint8_t *)miscbuf, 0x800, 0x1000);
+			free(miscbuf);
+			encode_msg_nocpy(io, BSL_CMD_NORMAL_RESET, 0);
+			if (!send_and_check(io)) break;
+
+		}
 		else if (!strcmp(str2[1], "reboot-fastboot")) {
 			if (!fdl1_loaded) {
 				DBG_LOG("FDL NOT READY\n");
